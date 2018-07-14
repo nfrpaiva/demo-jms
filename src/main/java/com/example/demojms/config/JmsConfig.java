@@ -1,16 +1,24 @@
 package com.example.demojms.config;
 
+import com.example.demojms.MessageListenerComponent;
+import com.example.demojms.MyListener;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jms.DefaultJmsListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
+import org.springframework.jms.config.JmsListenerEndpoint;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
+import org.springframework.jms.support.converter.MessageConverter;
 
 import javax.jms.ConnectionFactory;
+import javax.jms.Message;
+import javax.jms.MessageListener;
 
 
 @Configuration
@@ -28,6 +36,7 @@ public class JmsConfig {
 
     @Bean
     public ActiveMQConnectionFactory connectionFactory() {
+        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
         if ( "".equals(user) ) {
             return new ActiveMQConnectionFactory(brokerUrl);
         }
@@ -41,6 +50,7 @@ public class JmsConfig {
         configurer.configure(factory, connectionFactory);
         factory.setPubSubDomain(true);
         return factory;
+
     }
 
     @Bean
@@ -54,4 +64,14 @@ public class JmsConfig {
         jmsTemplate.setPubSubDomain( true );
         return jmsTemplate;
     }
+    @Bean
+    public DefaultMessageListenerContainer churrosMesageListener  (){
+        DefaultMessageListenerContainer x =  new DefaultMessageListenerContainer();
+        x.setMessageListener(new MyListener());
+        x.setConnectionFactory(connectionFactory());
+        x.setAutoStartup(true);
+        x.setDestinationName("queue.churros");
+        return x;
+    }
+
 }
